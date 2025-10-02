@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:chafon_h103_rfid/chafon_h103_rfid.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'l10n/app_localizations.dart';
 import 'BluetoothDeviceModel.dart';
 import 'functions.dart';
 import 'constants.dart';
@@ -86,7 +88,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         setState(() {
           connectedAddress = null;
           status = ConnectionStatus.error;
-          errorMessage = 'Device disconnected';
+          errorMessage = AppLocalizations.of(context)!.deviceDisconnected;
         });
       },
     );
@@ -109,7 +111,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       if (status == ConnectionStatus.searching || status == ConnectionStatus.found) {
         setState(() {
           status = ConnectionStatus.timeout;
-          errorMessage = 'PersicaRFID reader not found';
+          errorMessage = AppLocalizations.of(context)!.persicaRfidNotFound;
         });
         _stopScan();
       }
@@ -139,7 +141,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         connectedAddress = device.address;
       } else {
         status = ConnectionStatus.error;
-        errorMessage = 'Failed to connect to device';
+        errorMessage = AppLocalizations.of(context)!.failedToConnect;
       }
     });
   }
@@ -169,7 +171,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Developer mode enabled')));
+      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.developerModeEnabled)));
       // Restart scan to populate device list
       if (status == ConnectionStatus.timeout || status == ConnectionStatus.error) {
         _startScanWithTimeout();
@@ -193,7 +195,11 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(developerMode ? 'Bluetooth Devices (Dev Mode)' : 'PersicaRFID Connection'),
+        title: Text(
+          developerMode
+              ? AppLocalizations.of(context)!.appTitleDevMode
+              : AppLocalizations.of(context)!.appTitle,
+        ),
       ),
       body: developerMode ? _buildDeviceListView() : _buildAutoConnectView(),
     );
@@ -217,7 +223,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
                   );
                 },
                 icon: const Icon(Icons.play_circle),
-                label: const Text("Open Functions"),
+                label: Text(AppLocalizations.of(context)!.openFunctions),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
@@ -226,7 +232,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
               ElevatedButton.icon(
                 onPressed: _retryConnection,
                 icon: const Icon(Icons.refresh),
-                label: const Text("Retry Connection"),
+                label: Text(AppLocalizations.of(context)!.retryConnection),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
@@ -248,40 +254,40 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       case ConnectionStatus.searching:
         icon = Icons.search;
         iconColor = Colors.blue;
-        title = 'Searching...';
-        subtitle = 'Looking for PersicaRFID reader';
+        title = AppLocalizations.of(context)!.searching;
+        subtitle = AppLocalizations.of(context)!.searchingSubtitle;
         showSpinner = true;
         break;
       case ConnectionStatus.found:
         icon = Icons.check_circle_outline;
         iconColor = Colors.green;
-        title = 'Reader Found!';
-        subtitle = 'PersicaRFID detected';
+        title = AppLocalizations.of(context)!.readerFound;
+        subtitle = AppLocalizations.of(context)!.readerFoundSubtitle;
         break;
       case ConnectionStatus.connecting:
         icon = Icons.bluetooth_searching;
         iconColor = Colors.orange;
-        title = 'Connecting...';
-        subtitle = 'Establishing connection to PersicaRFID';
+        title = AppLocalizations.of(context)!.connecting;
+        subtitle = AppLocalizations.of(context)!.connectingSubtitle;
         showSpinner = true;
         break;
       case ConnectionStatus.connected:
         icon = Icons.check_circle;
         iconColor = Colors.green;
-        title = 'Connected';
-        subtitle = 'PersicaRFID is ready';
+        title = AppLocalizations.of(context)!.connected;
+        subtitle = AppLocalizations.of(context)!.connectedSubtitle;
         break;
       case ConnectionStatus.timeout:
         icon = Icons.error_outline;
         iconColor = Colors.red;
-        title = 'Connection Timeout';
-        subtitle = errorMessage ?? 'PersicaRFID reader not found';
+        title = AppLocalizations.of(context)!.connectionTimeout;
+        subtitle = errorMessage ?? AppLocalizations.of(context)!.persicaRfidNotFound;
         break;
       case ConnectionStatus.error:
         icon = Icons.error;
         iconColor = Colors.red;
-        title = 'Connection Error';
-        subtitle = errorMessage ?? 'Failed to connect';
+        title = AppLocalizations.of(context)!.connectionError;
+        subtitle = errorMessage ?? AppLocalizations.of(context)!.failedToConnect;
         break;
     }
 
@@ -321,7 +327,10 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
             children: [
               const Icon(Icons.developer_mode, color: Colors.orange),
               const SizedBox(width: 8),
-              const Text('Developer Mode Active', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                AppLocalizations.of(context)!.developerModeActive,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               const Spacer(),
               TextButton(
                 onPressed: () {
@@ -333,14 +342,14 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
                     _startScanWithTimeout();
                   }
                 },
-                child: const Text('Exit'),
+                child: Text(AppLocalizations.of(context)!.exit),
               ),
             ],
           ),
         ),
         Expanded(
           child: devices.isEmpty
-              ? const Center(child: Text('No devices found. Make sure Bluetooth is enabled.'))
+              ? Center(child: Text(AppLocalizations.of(context)!.noDevicesFound))
               : ListView.builder(
                   itemCount: devices.length,
                   itemBuilder: (context, index) {
@@ -356,12 +365,14 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
                         color: isTargetDevice ? Colors.amber : null,
                       ),
                       title: Text(device.name),
-                      subtitle: Text("RSSI: ${device.rssi} dBm\n${device.address}"),
+                      subtitle: Text(
+                        "${AppLocalizations.of(context)!.rssi}: ${device.rssi} ${AppLocalizations.of(context)!.dBm}\n${device.address}",
+                      ),
                       trailing: isConnected
                           ? const Icon(Icons.check_circle, color: Colors.green)
                           : ElevatedButton(
                               onPressed: () => _connectToDevice(device),
-                              child: const Text("Connect"),
+                              child: Text(AppLocalizations.of(context)!.connect),
                             ),
                     );
                   },
@@ -375,7 +386,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const Functions()));
               },
               icon: const Icon(Icons.play_circle),
-              label: const Text("Open Functions"),
+              label: Text(AppLocalizations.of(context)!.openFunctions),
             ),
           ),
       ],

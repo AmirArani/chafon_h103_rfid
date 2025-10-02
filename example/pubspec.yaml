@@ -8,12 +8,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   chafon_h103_rfid:
     path: ../
   cupertino_icons: ^1.0.8
   permission_handler: ^11.0.0
   hive_ce: ^2.8.0
   hive_ce_flutter: ^2.1.0
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   integration_test:
@@ -26,3 +29,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true

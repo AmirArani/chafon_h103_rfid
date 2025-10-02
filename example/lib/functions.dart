@@ -1,6 +1,7 @@
 import 'package:chafon_h103_rfid/chafon_h103_rfid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'l10n/app_localizations.dart';
 import 'device_scan_screen.dart';
 import 'repositories/instances.dart';
 import 'models/tag.dart';
@@ -54,24 +55,27 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Save Tag'),
+        title: Text(AppLocalizations.of(context)!.saveTag),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('EPC: $epc'),
+            Text('${AppLocalizations.of(context)!.epc}: $epc'),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Tag Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.name,
+                border: const OutlineInputBorder(),
               ),
               autofocus: true,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
           ElevatedButton(
             onPressed: () {
               final name = controller.text.trim();
@@ -79,7 +83,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                 Navigator.pop(context, name);
               }
             },
-            child: const Text('Save'),
+            child: Text(AppLocalizations.of(context)!.saveTag),
           ),
         ],
       ),
@@ -141,9 +145,9 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to get device configuration: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${AppLocalizations.of(context)!.failedToGetDeviceConfig}: $e")),
+      );
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -163,21 +167,27 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
       if (!mounted) return;
       if (result == "flash_saved" || result == "ok" || result == "params_saved_to_flash") {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Parameters saved (FLASH)"), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.parametersSaved),
+            backgroundColor: Colors.green,
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Parameters not written: $result"),
+            content: Text("${AppLocalizations.of(context)!.parametersNotWritten}: $result"),
             backgroundColor: Colors.orange,
           ),
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("${AppLocalizations.of(context)!.error}: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -216,7 +226,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
         setState(() {
           lastSingleEpc = actualEpc;
           lastTagInfo =
-              'Single tag read:\nEPC: ${actualEpc.isEmpty ? "<empty>" : actualEpc}\nData: $data\nStatus: $status';
+              '${AppLocalizations.of(context)!.singleTagRead}\n${AppLocalizations.of(context)!.epc}: ${actualEpc.isEmpty ? AppLocalizations.of(context)!.empty : actualEpc}\n${AppLocalizations.of(context)!.data}: $data\n${AppLocalizations.of(context)!.status}: $status';
         });
 
         // Refresh saved names to check if this EPC is already saved
@@ -252,14 +262,17 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
     final powLabel = outputPower?.toString() ?? '...';
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Functions"),
+        title: Text(AppLocalizations.of(context)!.functions),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.wifi), text: "Continuous Read "),
-            Tab(icon: Icon(Icons.radio_button_checked), text: "Single read"),
-            Tab(icon: Icon(Icons.radar), text: "Radar Search"),
-            Tab(icon: Icon(Icons.settings), text: "Settings"),
+          tabs: [
+            Tab(icon: const Icon(Icons.wifi), text: AppLocalizations.of(context)!.continuousRead),
+            Tab(
+              icon: const Icon(Icons.radio_button_checked),
+              text: AppLocalizations.of(context)!.singleRead,
+            ),
+            Tab(icon: const Icon(Icons.radar), text: AppLocalizations.of(context)!.radarSearch),
+            Tab(icon: const Icon(Icons.settings), text: AppLocalizations.of(context)!.settings),
           ],
         ),
         actions: [
@@ -267,7 +280,9 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(
               child: Text(
-                batteryLevel != null ? "🔋 $batteryLevel%" : "🔋 ...",
+                batteryLevel != null
+                    ? "🔋 $batteryLevel${AppLocalizations.of(context)!.percent}"
+                    : "🔋 ...",
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -305,14 +320,20 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                 return Card(
                   child: ListTile(
                     leading: const Icon(Icons.nfc),
-                    title: Text(savedName != null ? "Name: $savedName" : "EPC: $epc"),
+                    title: Text(
+                      savedName != null
+                          ? "${AppLocalizations.of(context)!.name}: $savedName"
+                          : "${AppLocalizations.of(context)!.epc}: $epc",
+                    ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (savedName != null) Text("EPC: $epc"),
-                        Text("RSSI: ${data['rssi']} dBm"),
-                        Text("Read Count: ${data['count']}"),
-                        Text("Last Seen: ${data['lastSeen']}"),
+                        if (savedName != null) Text("${AppLocalizations.of(context)!.epc}: $epc"),
+                        Text(
+                          "${AppLocalizations.of(context)!.rssi}: ${data['rssi']} ${AppLocalizations.of(context)!.dBm}",
+                        ),
+                        Text("${AppLocalizations.of(context)!.readCount}: ${data['count']}"),
+                        Text("${AppLocalizations.of(context)!.lastSeen}: ${data['lastSeen']}"),
                       ],
                     ),
                     trailing: savedName == null
@@ -325,7 +346,11 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                               await _loadSaved();
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Tag saved successfully")),
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(context)!.tagSavedSuccessfully,
+                                    ),
+                                  ),
                                 );
                               }
                             },
@@ -342,26 +367,26 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             children: [
               ElevatedButton.icon(
                 icon: const Icon(Icons.play_arrow),
-                label: const Text("Start"),
+                label: Text(AppLocalizations.of(context)!.start),
                 onPressed: () async {
                   final result = await ChafonH103RfidService.startInventory();
                   setState(() {
-                    log = '📡 Started: $result';
+                    log = '📡 ${AppLocalizations.of(context)!.started}: $result';
                   });
                 },
               ),
               ElevatedButton.icon(
                 icon: const Icon(Icons.cleaning_services_rounded),
-                label: const Text("Clear"),
+                label: Text(AppLocalizations.of(context)!.clear),
                 onPressed: () => setState(() => tagMap.clear()),
               ),
               ElevatedButton.icon(
                 icon: const Icon(Icons.stop),
-                label: const Text("Stop"),
+                label: Text(AppLocalizations.of(context)!.stop),
                 onPressed: () async {
                   final result = await ChafonH103RfidService.stopInventory();
                   setState(() {
-                    log = '🛑 Stopped: $result';
+                    log = '🛑 ${AppLocalizations.of(context)!.stopped}: $result';
                   });
                 },
               ),
@@ -384,7 +409,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
         children: [
           ElevatedButton.icon(
             icon: const Icon(Icons.radio_button_checked),
-            label: const Text("Read Single Tag"),
+            label: Text(AppLocalizations.of(context)!.readSingleTag),
             onPressed: () async {
               // Read from selected bank
               final bank = _memBankCode(selectedMemoryBank);
@@ -392,7 +417,10 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             },
           ),
           const SizedBox(height: 20),
-          const Text("Read Result:", style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            AppLocalizations.of(context)!.readResult,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
@@ -412,15 +440,18 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      savedName != null ? "Name: $savedName" : "EPC: $lastSingleEpc",
+                      savedName != null
+                          ? "${AppLocalizations.of(context)!.name}: $savedName"
+                          : "${AppLocalizations.of(context)!.epc}: $lastSingleEpc",
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    if (savedName != null) Text("EPC: $lastSingleEpc"),
+                    if (savedName != null)
+                      Text("${AppLocalizations.of(context)!.epc}: $lastSingleEpc"),
                     const SizedBox(height: 8),
                     savedName == null
                         ? ElevatedButton.icon(
                             icon: const Icon(Icons.save),
-                            label: const Text("Save Tag"),
+                            label: Text(AppLocalizations.of(context)!.saveTag),
                             onPressed: () async {
                               final name = await _promptForName(context, lastSingleEpc);
                               if (name == null || name.trim().isEmpty) return;
@@ -430,8 +461,10 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                                 await _loadSaved();
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Tag saved successfully"),
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(context)!.tagSavedSuccessfully,
+                                      ),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -440,7 +473,9 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text("Failed to save tag: $e"),
+                                      content: Text(
+                                        "${AppLocalizations.of(context)!.failedToSaveTag}: $e",
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -452,7 +487,10 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                             children: [
                               const Icon(Icons.verified, color: Colors.green),
                               const SizedBox(width: 8),
-                              const Text("Tag saved", style: TextStyle(color: Colors.green)),
+                              Text(
+                                AppLocalizations.of(context)!.tagSaved,
+                                style: const TextStyle(color: Colors.green),
+                              ),
                             ],
                           ),
                   ],
@@ -465,8 +503,10 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             value: selectedMemoryBank,
             items: memoryBankOptions
                 .map(
-                  (bank) =>
-                      DropdownMenuItem<String>(value: bank, child: Text("Memory Bank: $bank")),
+                  (bank) => DropdownMenuItem<String>(
+                    value: bank,
+                    child: Text("${AppLocalizations.of(context)!.memoryBank}: $bank"),
+                  ),
                 )
                 .toList(),
             onChanged: (value) {
@@ -512,9 +552,9 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Select Saved Tag or Enter EPC Manually:",
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            AppLocalizations.of(context)!.selectSavedTagOrEnterEpc,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           FutureBuilder<List<Tag>>(
@@ -522,9 +562,9 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                 return DropdownButtonFormField<Tag>(
-                  decoration: const InputDecoration(
-                    labelText: "Select Saved Tag",
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.selectSavedTag,
+                    border: const OutlineInputBorder(),
                   ),
                   items: snapshot.data!
                       .map(
@@ -547,9 +587,9 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
           const SizedBox(height: 16),
           TextField(
             controller: epcController,
-            decoration: const InputDecoration(
-              labelText: "EPC to Search",
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.epcToSearch,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 16),
@@ -560,7 +600,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             backgroundColor: Colors.grey[300],
           ),
           const SizedBox(height: 12),
-          Text("Detected EPC: $lastRadarEpc"),
+          Text("${AppLocalizations.of(context)!.detectedEpc}: $lastRadarEpc"),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -568,12 +608,12 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
               ElevatedButton.icon(
                 onPressed: isRadarActive ? null : startRadar,
                 icon: const Icon(Icons.location_searching),
-                label: const Text("Start Radar"),
+                label: Text(AppLocalizations.of(context)!.startRadar),
               ),
               ElevatedButton.icon(
                 onPressed: isRadarActive ? stopRadar : null,
                 icon: const Icon(Icons.stop_circle_outlined),
-                label: const Text("Stop Radar"),
+                label: Text(AppLocalizations.of(context)!.stopRadar),
               ),
             ],
           ),
@@ -589,7 +629,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "📶 Output Power ($powLabel dBm)",
+            "📶 ${AppLocalizations.of(context)!.outputPower} ($powLabel ${AppLocalizations.of(context)!.dBm})",
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           Slider(
@@ -597,13 +637,13 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             min: 5,
             max: 33,
             divisions: 28, // 5..33
-            label: '${outputPower?.toInt() ?? 20} dBm',
+            label: '${outputPower?.toInt() ?? 20} ${AppLocalizations.of(context)!.dBm}',
             onChanged: (value) => setState(() => outputPower = value.toInt()),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.save),
-            label: const Text("Save Parameters"),
+            label: Text(AppLocalizations.of(context)!.saveParameters),
             onPressed: () async => await sendConfigToDevice(),
           ),
           const SizedBox(height: 16),
@@ -611,14 +651,17 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             onPressed: () async {
               await ChafonH103RfidService.getBatteryLevel();
             },
-            child: const Text("🔋 Check Battery"),
+            child: Text("🔋 ${AppLocalizations.of(context)!.checkBattery}"),
           ),
           const SizedBox(height: 16),
           Text(log),
           const SizedBox(height: 32),
           const Divider(),
           const SizedBox(height: 16),
-          const Text("💾 Saved Tags", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(
+            "💾 ${AppLocalizations.of(context)!.savedTags}",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: FutureBuilder<List<Tag>>(
@@ -628,11 +671,11 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
-                      "No saved tags yet.\nSave tags from Continuous or Single Read tabs.",
+                      AppLocalizations.of(context)!.noSavedTagsYet,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   );
                 }
@@ -644,7 +687,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                       child: ListTile(
                         leading: const Icon(Icons.nfc),
                         title: Text(tag.name),
-                        subtitle: Text("EPC: ${tag.epc}"),
+                        subtitle: Text("${AppLocalizations.of(context)!.epc}: ${tag.epc}"),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -658,7 +701,11 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                                   await _loadSaved();
                                   if (mounted) {
                                     scaffoldMessenger.showSnackBar(
-                                      const SnackBar(content: Text("Tag renamed successfully")),
+                                      SnackBar(
+                                        content: Text(
+                                          AppLocalizations.of(context)!.tagRenamedSuccessfully,
+                                        ),
+                                      ),
                                     );
                                   }
                                 }
@@ -671,19 +718,21 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                                 final confirmed = await showDialog<bool>(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: const Text('Delete Tag'),
-                                    content: Text('Are you sure you want to delete "${tag.name}"?'),
+                                    title: Text(AppLocalizations.of(context)!.deleteTag),
+                                    content: Text(
+                                      AppLocalizations.of(context)!.areYouSureDelete(tag.name),
+                                    ),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context, false),
-                                        child: const Text('Cancel'),
+                                        child: Text(AppLocalizations.of(context)!.cancel),
                                       ),
                                       ElevatedButton(
                                         onPressed: () => Navigator.pop(context, true),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.red,
                                         ),
-                                        child: const Text('Delete'),
+                                        child: Text(AppLocalizations.of(context)!.delete),
                                       ),
                                     ],
                                   ),
@@ -693,7 +742,11 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                                   await _loadSaved();
                                   if (mounted) {
                                     scaffoldMessenger.showSnackBar(
-                                      const SnackBar(content: Text("Tag deleted successfully")),
+                                      SnackBar(
+                                        content: Text(
+                                          AppLocalizations.of(context)!.tagDeletedSuccessfully,
+                                        ),
+                                      ),
                                     );
                                   }
                                 }
@@ -711,7 +764,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
           const SizedBox(height: 16),
           ElevatedButton.icon(
             icon: const Icon(Icons.link_off),
-            label: const Text("Disconnect"),
+            label: Text(AppLocalizations.of(context)!.disconnect),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               await ChafonH103RfidService.disconnect();
