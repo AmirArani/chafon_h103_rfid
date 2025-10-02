@@ -70,6 +70,4 @@ dependencies {
     // Tests
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.0.0")
-    //for java
-    //implementation files('/Users/rashidniyazov/development/flutter/bin/cache/artifacts/engine/android-x64/flutter.jar')
 }
