@@ -152,7 +152,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
   Future<void> sendConfigToDevice() async {
     final power = _normalizePower(outputPower);
     try {
-      // Yalnız gücü yaz və FLASH-a saxla (inventory işləyirdisə özün bərpa etmirik – settings tabındayıq)
+      // Write only power and save to FLASH (don't resume inventory since we're in settings tab)
       final result = await ChafonH103RfidService.setOnlyOutputPower(
         power: power,
         saveToFlash: true,
@@ -188,7 +188,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
     loadDeviceConfig();
     _loadSaved();
 
-    // İlk callback init – təkrar init etməyək
+    // First callback init – don't init again
     ChafonH103RfidService.initCallbacks(
       onTagRead: (tag) {
         final epc = tag['epc'];
@@ -237,7 +237,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
       onFlashSaved: () {},
     );
 
-    // İstəyə görə açılışda batareya soruş
+    // Optionally request battery level on startup
     ChafonH103RfidService.getBatteryLevel();
   }
 
@@ -386,7 +386,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             icon: const Icon(Icons.radio_button_checked),
             label: const Text("Read Single Tag"),
             onPressed: () async {
-              // Seçilən bankdan oxu
+              // Read from selected bank
               final bank = _memBankCode(selectedMemoryBank);
               await ChafonH103RfidService.readSingleTagFromBank(bank);
             },
@@ -493,7 +493,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
         radarColor = Colors.grey;
         lastRadarEpc = '';
       });
-      // DİQQƏT: Burada initCallbacks ÇAĞIRMIRIQ – artıq initState-də verilib.
+      // ATTENTION: We don't call initCallbacks here – it's already provided in initState.
     }
 
     Future<void> stopRadar() async {

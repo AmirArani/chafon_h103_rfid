@@ -56,16 +56,16 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
     private AllParamBean latestAllParam = null;
 
-    // BLE hazır/notify aktiv flaqı və əməliyyat kilidi
+    // BLE ready/notify active flag and operation lock
     private volatile boolean bleReady = false;
     private final AtomicBoolean opInProgress = new AtomicBoolean(false);
 
-    // Inventory vəziyyətini izləmək üçün flaq
+    // Flag to track inventory status
     private volatile boolean inventoryRunning = false;
 
-    // Güc aralığı
+    // Power range
     private static final int POWER_MIN = 5;
-    private static final int POWER_MAX = 33; // slider 33-ə qədər
+    private static final int POWER_MAX = 33; // slider up to 33
 
     private static final UUID SERVICE_UUID = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     private static final UUID WRITE_UUID   = UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb");
@@ -86,7 +86,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         try {
-            Log.d("CHAFON_PLUGIN", "📞 Method çağırıldı: " + call.method);
+            Log.d("CHAFON_PLUGIN", "📞 Method called: " + call.method);
             switch (call.method) {
                 case "getPlatformVersion":
                     result.success("Android " + android.os.Build.VERSION.RELEASE);
@@ -140,19 +140,19 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                     break;
                 }
 
-                // YENİ: yalnız gücü yazan sadə API
+                // NEW: simple API that only writes power
                 case "setOnlyOutputPower": {
                     Integer power = call.argument("power");
                     Boolean saveToFlash = call.argument("saveToFlash"); // default true
                     Boolean resumeInventory = call.argument("resumeInventory"); // default false
-                    Integer region = call.argument("region"); // <-- YENİ
+                    Integer region = call.argument("region"); // <-- NEW
 
                     int pwr = power != null ? power : 17;
                     boolean save = (saveToFlash == null) ? true : saveToFlash;
                     boolean resume = (resumeInventory == null) ? false : resumeInventory;
-                    int reg = (region == null) ? -1 : region; // -1 => region dəyişmə
+                    int reg = (region == null) ? -1 : region; // -1 => don't change region
 
-                    setOnlyOutputPower(pwr, save, resume, reg, result); // <-- imza dəyişdi
+                    setOnlyOutputPower(pwr, save, resume, reg, result); // <-- signature changed
                     break;
                 }
 
@@ -178,7 +178,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                 case "startRadarTracking": {
                     String radarEpcValue = call.argument("epc");
                     if (radarEpcValue == null || radarEpcValue.isEmpty()) {
-                        result.error("INVALID_ARGUMENT", "EPC boş ola bilməz", null);
+                        result.error("INVALID_ARGUMENT", "EPC cannot be empty", null);
                     } else {
                         startRadarTracking(radarEpcValue, result);
                     }
@@ -208,7 +208,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
                 switch (cmdType) {
                     case CmdType.TYPE_GET_BATTERY_CAPACITY: {
-                        Log.d("CHAFON_PLUGIN", "📩 TYPE_BATTERY cavabı gəldi");
+                        Log.d("CHAFON_PLUGIN", "📩 TYPE_BATTERY response received");
                         if (obj instanceof BatteryCapacityBean) {
                             int battery = ((BatteryCapacityBean) obj).mBatteryCapacity;
 
@@ -228,15 +228,15 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                     }
 
                     case CmdType.TYPE_OUT_MODE:
-                        Log.d("CHAFON_PLUGIN", "📤 Output mode dəyişdi");
+                        Log.d("CHAFON_PLUGIN", "📤 Output mode changed");
                         break;
 
                     case CmdType.TYPE_KEY_STATE:
-                        Log.d("CHAFON_PLUGIN", "🔘 Düymə statusu gəldi");
+                        Log.d("CHAFON_PLUGIN", "🔘 Button status received");
                         break;
 
                     case CmdType.TYPE_GET_DEVICE_INFO:
-                        Log.d("CHAFON_PLUGIN", "📡 Cihaz məlumatı gəldi");
+                        Log.d("CHAFON_PLUGIN", "📡 Device info received");
                         break;
 
                     case CmdType.TYPE_GET_ALL_PARAM: {
@@ -260,7 +260,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                     }
 
                     case CmdType.TYPE_SET_ALL_PARAM:
-                        Log.d("CHAFON_PLUGIN", "✅ Parametrlər RAM-a yazıldı (notify)");
+                        Log.d("CHAFON_PLUGIN", "✅ Parameters written to RAM (notify)");
                         break;
 
                     case CmdType.TYPE_INVENTORY: {
@@ -272,7 +272,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                             int rssi = tag.mRSSI;
 
                             if (radarActive && radarEpc != null && epc.equalsIgnoreCase(radarEpc)) {
-                                Log.d("CHAFON_PLUGIN", "🎯 RADAR TAPDI: EPC=" + epc + ", RSSI=" + rssi);
+                                Log.d("CHAFON_PLUGIN", "🎯 RADAR FOUND: EPC=" + epc + ", RSSI=" + rssi);
 
                                 Map<String, Object> radarMap = new HashMap<>();
                                 radarMap.put("epc", epc);
@@ -310,7 +310,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
                             if (!epc.trim().isEmpty() || !data.trim().isEmpty()) {
                                 Map<String, Object> tagMap = new HashMap<>();
-                                tagMap.put("epc", epc.isEmpty() ? "<boş>" : epc);
+                                tagMap.put("epc", epc.isEmpty() ? "<empty>" : epc);
                                 tagMap.put("data", data);
                                 tagMap.put("status", status);
                                 tagMap.put("timestamp", System.currentTimeMillis());
@@ -319,14 +319,14 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                                     channel.invokeMethod("onTagReadSingle", tagMap);
                                 });
                             } else {
-                                Log.w("CHAFON_PLUGIN", "❌ READ_TAG cavabı keçərsizdir – nə EPC, nə də DATA var");
+                                Log.w("CHAFON_PLUGIN", "❌ READ_TAG response is invalid – no EPC or DATA");
                             }
                         }
                         break;
                     }
 
                     default: {
-                        // Bəzi firmware-lərdə TagInfoBean başqa cmdType ilə gələ bilər – fallback
+                        // Some firmware may send TagInfoBean with different cmdType – fallback
                         Object any = cmdData.getData();
                         if (any instanceof TagInfoBean) {
                             TagInfoBean tag = (TagInfoBean) any;
@@ -345,7 +345,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                                 });
                             }
                         } else {
-                            Log.d("CHAFON_PLUGIN", "⚠️ Fallback: naməlum cmdType=" + cmdType + " obj=" + any);
+                            Log.d("CHAFON_PLUGIN", "⚠️ Fallback: unknown cmdType=" + cmdType + " obj=" + any);
                         }
                         break;
                     }
@@ -368,7 +368,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
             // FLASH ack (0x79)
             if (cmd == 0x79) {
-                Log.d("CHAFON_PLUGIN", "💾 FLASH əmri uğurla təsdiqləndi");
+                Log.d("CHAFON_PLUGIN", "💾 FLASH command successfully acknowledged");
 
                 if (flashTimeoutRunnable != null) {
                     flashTimeoutHandler.removeCallbacks(flashTimeoutRunnable);
@@ -378,7 +378,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                     pendingSaveFlashResult.success("flash_saved");
                     pendingSaveFlashResult = null;
                 }
-                // Qeyd: Burada 0x88/0x8E YENİDƏN göndərmirik.
+                // Note: We don't resend 0x88/0x8E here.
                 return;
             }
 
@@ -403,11 +403,11 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                 return;
             }
 
-            // Qalan xam kadrlara (məsələn tag stream 0x01 len>1) ehtiyac yoxdur – TagInfoBean ilə tuturuq.
+            // No need for remaining raw frames (e.g. tag stream 0x01 len>1) – we handle with TagInfoBean.
         }
     };
 
-    // ==== BLE əmrləri ====
+    // ==== BLE commands ====
 
     private void getBatteryLevel(MethodChannel.Result result) {
         if (bleCore == null || !bleCore.isConnect()) {
@@ -419,11 +419,11 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
         boolean sent = writeWithRetry(SERVICE_UUID, WRITE_UUID, cmd);
 
         if (sent) {
-            Log.d("CHAFON_PLUGIN", "🔋 Battery səviyyə əmri göndərildi.");
+            Log.d("CHAFON_PLUGIN", "🔋 Battery level command sent.");
             result.success("battery_request_sent");
 
             batteryTimeoutRunnable = () -> {
-                Log.w("CHAFON_PLUGIN", "⏰ Battery cavabı gəlmədi (timeout)");
+                Log.w("CHAFON_PLUGIN", "⏰ Battery response not received (timeout)");
                 channel.invokeMethod("onBatteryTimeout", null);
             };
             batteryTimeoutHandler.postDelayed(batteryTimeoutRunnable, 5000);
@@ -434,11 +434,11 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
     }
 
     private void startScan(MethodChannel.Result result) {
-        Log.d("CHAFON_PLUGIN", "▶️ startScan metodu çağırıldı");
+        Log.d("CHAFON_PLUGIN", "▶️ startScan method called");
 
         if (isScanning) {
-            Log.d("CHAFON_PLUGIN", "⚠️ Skan onsuz da davam edir");
-            result.success("skan_onsuzda_davam_edir");
+            Log.d("CHAFON_PLUGIN", "⚠️ Scan is already running");
+            result.success("scan_already_running");
             return;
         }
 
@@ -451,7 +451,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                         if (!discoveredDevices.containsKey(device.getAddress())) {
                             discoveredDevices.put(device.getAddress(), device);
                             Map<String, Object> deviceInfo = new HashMap<>();
-                            deviceInfo.put("name", device.getName() != null ? device.getName() : "Naməlum");
+                            deviceInfo.put("name", device.getName() != null ? device.getName() : "Unknown");
                             deviceInfo.put("address", device.getAddress());
                             deviceInfo.put("rssi", pResult.getRssi());
 
@@ -464,36 +464,36 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
                 @Override
                 public void onBtScanFail(int pErrorCode) {
-                    Log.e("CHAFON_PLUGIN", "❌ Skan uğursuz oldu. Kod: " + pErrorCode);
+                    Log.e("CHAFON_PLUGIN", "❌ Scan failed. Code: " + pErrorCode);
                     new Handler(Looper.getMainLooper()).post(() -> {
-                        channel.invokeMethod("onScanError", "Skan xətası: " + pErrorCode);
+                        channel.invokeMethod("onScanError", "Scan error: " + pErrorCode);
                     });
                 }
             };
 
             bleCore.startScan(scanCallback);
             isScanning = true;
-            Log.d("CHAFON_PLUGIN", "🚀 Skan başlatıldı!");
-            result.success("skan_basladildi");
+            Log.d("CHAFON_PLUGIN", "🚀 Scan started!");
+            result.success("scan_started");
         } catch (Exception e) {
-            Log.e("CHAFON_PLUGIN", "🔥 startScan xətası: " + e.getMessage());
-            result.error("SCAN_ERROR", "Skan başladılmadı: " + e.getMessage(), null);
+            Log.e("CHAFON_PLUGIN", "🔥 startScan error: " + e.getMessage());
+            result.error("SCAN_ERROR", "Scan not started: " + e.getMessage(), null);
         }
     }
 
     private void stopScan(@Nullable MethodChannel.Result result) {
         if (!isScanning) {
-            if (result != null) result.success("skan_onsuzda_dayandirilib");
+            if (result != null) result.success("scan_already_stopped");
             return;
         }
 
         try {
             bleCore.stopScan();
             isScanning = false;
-            if (result != null) result.success("skan_dayandirildi");
+            if (result != null) result.success("scan_stopped");
         } catch (Exception e) {
             if (result != null) {
-                result.error("STOP_SCAN_ERROR", "Skan dayandırılmadı: " + e.getMessage(), null);
+                result.error("STOP_SCAN_ERROR", "Scan not stopped: " + e.getMessage(), null);
             }
         }
     }
@@ -538,7 +538,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
     private void configureAfterConnection(MethodChannel.Result result) {
         try {
-            // Rəsmi app kimi: qoşulandan sonra xüsusi 0x88/0x8E göndərmirik
+            // Like official app: we don't send special 0x88/0x8E after connection
             bleReady = true;
             result.success(true);
         } catch (Exception e) {
@@ -562,32 +562,32 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
                 channel.invokeMethod("onDisconnected", null);
             });
         } catch (Exception e) {
-            result.error("DISCONNECT_FAILED", "Bağlantı kəsilmədi: " + e.getMessage(), null);
+            result.error("DISCONNECT_FAILED", "Connection not disconnected: " + e.getMessage(), null);
         }
     }
 
     private void getAllDeviceConfig(MethodChannel.Result result) {
         try {
             if (!waitBleReady(1000)) {
-                result.error("BLE_NOT_READY", "Notify hazır deyil", null);
+                result.error("BLE_NOT_READY", "Notify not ready", null);
                 return;
             }
             byte[] cmd = CmdBuilder.buildGetAllParamCmd();
             boolean sent = writeWithRetry(SERVICE_UUID, WRITE_UUID, cmd);
 
             if (sent) {
-                pendingGetConfigResult = result; // cavab notify-dən gələcək
+                pendingGetConfigResult = result; // response will come from notify
             } else {
-                result.error("READ_CONFIG_FAILED", "BLE oxuma əmri göndərilmədi", null);
+                result.error("READ_CONFIG_FAILED", "BLE read command not sent", null);
             }
         } catch (Exception e) {
-            result.error("READ_CONFIG_EXCEPTION", "Xəta: " + e.getMessage(), null);
+            result.error("READ_CONFIG_EXCEPTION", "Error: " + e.getMessage(), null);
         }
     }
 
     private void saveParamsToFlash(MethodChannel.Result result) {
         try {
-            Log.d("CHAFON_PLUGIN", "💾 FLASH yaddaşa yazma əmri göndərilir...");
+            Log.d("CHAFON_PLUGIN", "💾 FLASH write command being sent...");
 
             pendingSaveFlashResult = result;
 
@@ -599,36 +599,36 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
             boolean sent = writeWithRetry(SERVICE_UUID, WRITE_UUID, cmd);
             if (!sent) {
                 pendingSaveFlashResult = null;
-                result.error("FLASH_WRITE_FAILED", "FLASH əmrini göndərmək alınmadı", null);
+                result.error("FLASH_WRITE_FAILED", "FLASH command could not be sent", null);
                 return;
             }
 
-            // Timeout: 2s ərzində 0x79 ack gəlməsə, error
+            // Timeout: if 0x79 ack not received within 2s, error
             flashTimeoutRunnable = () -> {
                 if (pendingSaveFlashResult != null) {
                     MethodChannel.Result r = pendingSaveFlashResult;
                     pendingSaveFlashResult = null;
-                    r.error("FLASH_TIMEOUT", "FLASH cavabı gəlmədi", null);
+                    r.error("FLASH_TIMEOUT", "FLASH response not received", null);
                 }
             };
             flashTimeoutHandler.postDelayed(flashTimeoutRunnable, 2000);
 
         } catch (Exception e) {
-            result.error("FLASH_EXCEPTION", "Xəta baş verdi: " + e.getMessage(), null);
+            result.error("FLASH_EXCEPTION", "Error occurred: " + e.getMessage(), null);
         }
     }
 
-    // ==== YENİ: Yalnız gücü yazan sadə API ====
+    // ==== NEW: Simple API that only writes power ====
     private void setOnlyOutputPower(int power,
                                     boolean saveToFlash,
                                     boolean resumeInventory,
-                                    int regionOrMinus1, // -1 gəlirsə region toxunmuruq
+                                    int regionOrMinus1, // -1 if region should not be touched
                                     MethodChannel.Result result) {
         Log.d("CHAFON_PLUGIN", "⚙️ setOnlyOutputPower(power=" + power + ", save=" + saveToFlash +
                 ", resume=" + resumeInventory + ", region=" + regionOrMinus1 + ")");
 
         if (!opInProgress.compareAndSet(false, true)) {
-            result.error("BUSY", "Başqa əməliyyat gedir", null);
+            result.error("BUSY", "Another operation is in progress", null);
             return;
         }
 
@@ -637,7 +637,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
         try {
             if (!waitBleReady(1000) || bleCore == null || !bleCore.isConnect()) {
                 opInProgress.set(false);
-                result.error("BLE_NOT_READY", "Cihaz qoşulu deyil və ya notify hazır deyil", null);
+                result.error("BLE_NOT_READY", "Device not connected or notify not ready", null);
                 return;
             }
 
@@ -647,26 +647,26 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
             }
 
             if (latestAllParam == null) {
-                // latestAllParam yoxdursa: region verilibsə onu, verilməyibsə default ETSI(2)
+                // if latestAllParam doesn't exist: use provided region, otherwise default ETSI(2)
                 int effectiveRegion = (regionOrMinus1 == -1) ? 2 : regionOrMinus1;
                 latestAllParam = makeAllParamsFromDefaults(power, effectiveRegion, /*q*/4, /*session*/0);
             } else {
                 int p = Math.max(POWER_MIN, Math.min(POWER_MAX, power));
                 latestAllParam.mRfidPower = (byte) p;
 
-                // region paramı verilmişdisə, tezlik cədvəlini də yenilə
+                // if region param is provided, also update frequency table
                 if (regionOrMinus1 != -1) {
                     latestAllParam.mRfidFreq = buildFreqByRegion(regionOrMinus1);
                 }
             }
 
-            // RAM-a yaz
+            // Write to RAM
             byte[] cmd = CmdBuilder.buildSetAllParamCmd(latestAllParam);
             boolean sent = writeWithRetry(SERVICE_UUID, WRITE_UUID, cmd);
             if (!sent) {
                 if (resumeInventory && wasRunning) internalStartInventory();
                 opInProgress.set(false);
-                result.error("WRITE_FAILED", "Parametrlər RAM-a yazılmadı", null);
+                result.error("WRITE_FAILED", "Parameters not written to RAM", null);
                 return;
             }
 
@@ -702,12 +702,12 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
     }
 
 
-    // ==== ƏSAS DƏYİŞİKLİK: getAllDeviceConfig-siz də işləyən versiya ====
+    // ==== MAIN CHANGE: Version that works without getAllDeviceConfig ====
     private void sendAndSaveAllParams(int power, int region, int qValue, int session, MethodChannel.Result result) {
         Log.d("CHAFON_PLUGIN", "📦 sendAndSaveAllParams(power=" + power + ", region=" + region + ", q=" + qValue + ", s=" + session + ")");
 
         if (!opInProgress.compareAndSet(false, true)) {
-            result.error("BUSY", "Başqa parametrlər əməliyyatı gedir", null);
+            result.error("BUSY", "Another parameters operation is in progress", null);
             return;
         }
 
@@ -716,37 +716,37 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
         try {
             if (!waitBleReady(1000) || bleCore == null || !bleCore.isConnect()) {
                 opInProgress.set(false);
-                result.error("BLE_NOT_READY", "Notify/CCCD hazır deyil və ya cihaz qoşulu deyil", null);
+                result.error("BLE_NOT_READY", "Notify/CCCD not ready or device not connected", null);
                 return;
             }
 
-            // Inventory işləyirdisə, dayandır
+            // If inventory is running, stop it
             if (wasRunning) {
                 internalStopInventory();
                 try { Thread.sleep(150); } catch (InterruptedException ignored) {}
             }
 
             if (latestAllParam == null) {
-                latestAllParam = makeAllParamsFromDefaults(power, region, qValue, session); // <<< burda region istifadə olundu
+                latestAllParam = makeAllParamsFromDefaults(power, region, qValue, session); // <<< region used here
             } else {
                 int p = Math.max(POWER_MIN, Math.min(POWER_MAX, power));
                 latestAllParam.mRfidPower = (byte) p;
                 latestAllParam.mQValue    = (byte) qValue;
                 latestAllParam.mSession   = (byte) session;
-                latestAllParam.mRfidFreq  = buildFreqByRegion(region); // <<< burda da!
+                latestAllParam.mRfidFreq  = buildFreqByRegion(region); // <<< here too!
             }
 
-            // RAM-a yaz
+            // Write to RAM
             byte[] cmd = CmdBuilder.buildSetAllParamCmd(latestAllParam);
             boolean sent = writeWithRetry(SERVICE_UUID, WRITE_UUID, cmd);
             if (!sent) {
                 if (wasRunning) internalStartInventory();
                 opInProgress.set(false);
-                result.error("WRITE_FAILED", "Parametrlər RAM-a yazıla bilmədi", null);
+                result.error("WRITE_FAILED", "Parameters could not be written to RAM", null);
                 return;
             }
 
-            // FLASH-a saxla
+            // Save to FLASH
             saveParamsToFlash(new MethodChannel.Result() {
                 @Override public void success(Object res) {
                     if (wasRunning) internalStartInventory();
@@ -768,11 +768,11 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
         } catch (Exception e) {
             if (wasRunning) internalStartInventory();
             opInProgress.set(false);
-            result.error("WRITE_EXCEPTION", "Xəta baş verdi: " + e.getMessage(), null);
+            result.error("WRITE_EXCEPTION", "Error occurred: " + e.getMessage(), null);
         }
     }
 
-    // ==== Helper-lər ====
+    // ==== Helpers ====
 
     private boolean waitBleReady(long timeoutMs) {
         long end = System.currentTimeMillis() + timeoutMs;
@@ -840,21 +840,21 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
 
     private void startInventory(MethodChannel.Result result) {
         if (!bleReady || bleCore == null || !bleCore.isConnect()) {
-            result.error("BLE_NOT_READY", "Notify/connection hazır deyil", null);
+            result.error("BLE_NOT_READY", "Notify/connection not ready", null);
             return;
         }
         if (!opInProgress.compareAndSet(false, true)) {
-            result.error("BUSY", "Başqa əməliyyat gedir", null);
+            result.error("BUSY", "Another operation is in progress", null);
             return;
         }
 
         new Thread(() -> {
             try {
-                // 1) Ehtiyat üçün STOP (0x02)
+                // 1) STOP as precaution (0x02)
                 writeWithRetry(SERVICE_UUID, WRITE_UUID, CmdBuilder.buildStopInventoryCmd());
                 try { Thread.sleep(120); } catch (InterruptedException ignored) {}
 
-                // 2) START (0x01) – rəsmi app kimi, read-mode/out-mode dəyişmirik
+                // 2) START (0x01) – like official app, we don't change read-mode/out-mode
                 byte[] invCmd = CmdBuilder.buildInventoryISOContinueCmd((byte) 0x00, 0);
                 boolean ok = writeWithRetry(SERVICE_UUID, WRITE_UUID, invCmd);
                 if (ok) inventoryRunning = true;
@@ -890,7 +890,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
         }
     }
 
-    // Daxili start/stop (result qaytarmır)
+    // Internal start/stop (doesn't return result)
     private void internalStartInventory() {
         try {
             byte[] invCmd = CmdBuilder.buildInventoryISOContinueCmd((byte) 0x00, 0);
@@ -959,7 +959,7 @@ public class ChafonH103RfidPlugin implements FlutterPlugin, MethodChannel.Method
             inventoryRunning = true;
             result.success("radar_started");
         } else {
-            result.error("RADAR_START_FAIL", "Radar izləməsi başladılmadı", null);
+            result.error("RADAR_START_FAIL", "Radar tracking not started", null);
         }
     }
 

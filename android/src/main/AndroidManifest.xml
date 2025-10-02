@@ -2,11 +2,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.chafon_h103_rfid">
 
-    <!-- Android 12 və yuxarısı üçün -->
+    <!-- For Android 12 and above -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:targetApi="31" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:targetApi="31" />
 
-    <!-- Köhnə Android versiyalar üçün -->
+    <!-- For older Android versions -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
