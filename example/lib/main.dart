@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+
 import 'device_scan_screen.dart';
-import 'models/tag.dart';
 import 'l10n/app_localizations.dart';
+import 'models/tag.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,14 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          // seedColor: const Color(0xff1F493D),
+          seedColor: Colors.green.shade900,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
       builder: (context, child) {
         final base = Theme.of(context);
         final textTheme = GoogleFonts.vazirmatnTextTheme(base.textTheme);

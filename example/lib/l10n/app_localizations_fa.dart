@@ -118,16 +118,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get epc => 'EPC';
 
   @override
-  String get data => 'داده';
+  String get data => 'Data';
 
   @override
-  String get status => 'وضعیت';
+  String get status => 'Status';
 
   @override
   String get empty => 'خالی';
 
   @override
-  String get name => 'نام';
+  String get name => 'Name';
 
   @override
   String get saveTag => 'ذخیره تگ';
@@ -227,10 +227,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get rssi => 'RSSI';
 
   @override
-  String get readCount => 'تعداد خواندن';
+  String get readCount => 'Count';
 
   @override
-  String get lastSeen => 'آخرین مشاهده';
+  String get lastSeen => 'Last Seen';
 
   @override
   String get dBm => 'dBm';

@@ -313,13 +313,13 @@ abstract class AppLocalizations {
   /// No description provided for @data.
   ///
   /// In fa, this message translates to:
-  /// **'داده'**
+  /// **'Data'**
   String get data;
 
   /// No description provided for @status.
   ///
   /// In fa, this message translates to:
-  /// **'وضعیت'**
+  /// **'Status'**
   String get status;
 
   /// No description provided for @empty.
@@ -331,7 +331,7 @@ abstract class AppLocalizations {
   /// No description provided for @name.
   ///
   /// In fa, this message translates to:
-  /// **'نام'**
+  /// **'Name'**
   String get name;
 
   /// No description provided for @saveTag.
@@ -523,13 +523,13 @@ abstract class AppLocalizations {
   /// No description provided for @readCount.
   ///
   /// In fa, this message translates to:
-  /// **'تعداد خواندن'**
+  /// **'Count'**
   String get readCount;
 
   /// No description provided for @lastSeen.
   ///
   /// In fa, this message translates to:
-  /// **'آخرین مشاهده'**
+  /// **'Last Seen'**
   String get lastSeen;
 
   /// No description provided for @dBm.

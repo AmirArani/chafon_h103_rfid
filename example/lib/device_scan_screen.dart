@@ -1,12 +1,13 @@
 import 'dart:async';
+
 import 'package:chafon_h103_rfid/chafon_h103_rfid.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'l10n/app_localizations.dart';
+
 import 'BluetoothDeviceModel.dart';
-import 'functions.dart';
 import 'constants.dart';
+import 'functions.dart';
+import 'l10n/app_localizations.dart';
 
 enum ConnectionStatus { searching, found, connecting, connected, timeout, error }
 
@@ -193,16 +194,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          developerMode
-              ? AppLocalizations.of(context)!.appTitleDevMode
-              : AppLocalizations.of(context)!.appTitle,
-        ),
-      ),
-      body: developerMode ? _buildDeviceListView() : _buildAutoConnectView(),
-    );
+    return Scaffold(body: developerMode ? _buildDeviceListView() : _buildAutoConnectView());
   }
 
   Widget _buildAutoConnectView() {
@@ -212,6 +204,12 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset('assets/persica.png', height: 150, width: 150, fit: BoxFit.contain),
+            Text(
+              'Persica Soft',
+              style: TextStyle(fontSize: 24, color: Color(0xff1F493D), fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 50),
             GestureDetector(onTap: _handleStatusTap, child: _buildStatusCard()),
             const SizedBox(height: 32),
             if (status == ConnectionStatus.connected)

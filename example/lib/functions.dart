@@ -1,10 +1,10 @@
 import 'package:chafon_h103_rfid/chafon_h103_rfid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'l10n/app_localizations.dart';
-import 'device_scan_screen.dart';
-import 'repositories/instances.dart';
 import 'models/tag.dart';
+import 'repositories/instances.dart';
 
 class Functions extends StatefulWidget {
   const Functions({super.key});
@@ -18,7 +18,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
 
   bool isLoading = false;
   Map<String, Map<String, dynamic>> tagMap = {};
-  String lastTagInfo = 'Tag not read';
+  String lastTagInfo = 'تگ خوانده نشده!';
   String log = '';
   String selectedMemoryBank = 'EPC';
   final memoryBankOptions = ['TID', 'EPC'];
@@ -140,7 +140,7 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
     try {
       final config = await ChafonH103RfidService.getAllDeviceConfig();
       setState(() {
-        // plugin ETSI-də 5..33 dBm
+        // plugin ETSI 5..33 dBm
         outputPower = (config['power'] ?? 20).clamp(5, 33);
       });
     } catch (e) {
@@ -317,45 +317,48 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
                 final data = tagEntries[index].value;
                 final savedName = savedNamesByEpc[epc];
 
-                return Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.nfc),
-                    title: Text(
-                      savedName != null
-                          ? "${AppLocalizations.of(context)!.name}: $savedName"
-                          : "${AppLocalizations.of(context)!.epc}: $epc",
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (savedName != null) Text("${AppLocalizations.of(context)!.epc}: $epc"),
-                        Text(
-                          "${AppLocalizations.of(context)!.rssi}: ${data['rssi']} ${AppLocalizations.of(context)!.dBm}",
-                        ),
-                        Text("${AppLocalizations.of(context)!.readCount}: ${data['count']}"),
-                        Text("${AppLocalizations.of(context)!.lastSeen}: ${data['lastSeen']}"),
-                      ],
-                    ),
-                    trailing: savedName == null
-                        ? IconButton(
-                            icon: const Icon(Icons.save),
-                            onPressed: () async {
-                              final name = await _promptForName(context, epc);
-                              if (name == null) return;
-                              await tagRepository.save(epc, name);
-                              await _loadSaved();
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(context)!.tagSavedSuccessfully,
+                return Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.nfc),
+                      title: Text(
+                        savedName != null
+                            ? "${AppLocalizations.of(context)!.name}: $savedName"
+                            : "${AppLocalizations.of(context)!.epc}: $epc",
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (savedName != null) Text("${AppLocalizations.of(context)!.epc}: $epc"),
+                          Text(
+                            "${AppLocalizations.of(context)!.rssi}: ${data['rssi']} ${AppLocalizations.of(context)!.dBm}",
+                          ),
+                          Text("${AppLocalizations.of(context)!.readCount}: ${data['count']}"),
+                          Text("${AppLocalizations.of(context)!.lastSeen}: ${data['lastSeen']}"),
+                        ],
+                      ),
+                      trailing: savedName == null
+                          ? IconButton(
+                              icon: const Icon(Icons.save),
+                              onPressed: () async {
+                                final name = await _promptForName(context, epc);
+                                if (name == null) return;
+                                await tagRepository.save(epc, name);
+                                await _loadSaved();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(context)!.tagSavedSuccessfully,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }
-                            },
-                          )
-                        : const Icon(Icons.verified, color: Colors.green),
+                                  );
+                                }
+                              },
+                            )
+                          : const Icon(Icons.verified, color: Colors.green),
+                    ),
                   ),
                 );
               },
@@ -407,93 +410,89 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ElevatedButton.icon(
-            icon: const Icon(Icons.radio_button_checked),
-            label: Text(AppLocalizations.of(context)!.readSingleTag),
-            onPressed: () async {
-              // Read from selected bank
-              final bank = _memBankCode(selectedMemoryBank);
-              await ChafonH103RfidService.readSingleTagFromBank(bank);
-            },
-          ),
-          const SizedBox(height: 20),
           Text(
             AppLocalizations.of(context)!.readResult,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(8),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(lastTagInfo, style: const TextStyle(fontSize: 14)),
             ),
-            child: Text(lastTagInfo, style: const TextStyle(fontSize: 14)),
           ),
           if (lastSingleEpc.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      savedName != null
-                          ? "${AppLocalizations.of(context)!.name}: $savedName"
-                          : "${AppLocalizations.of(context)!.epc}: $lastSingleEpc",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    if (savedName != null)
-                      Text("${AppLocalizations.of(context)!.epc}: $lastSingleEpc"),
-                    const SizedBox(height: 8),
-                    savedName == null
-                        ? ElevatedButton.icon(
-                            icon: const Icon(Icons.save),
-                            label: Text(AppLocalizations.of(context)!.saveTag),
-                            onPressed: () async {
-                              final name = await _promptForName(context, lastSingleEpc);
-                              if (name == null || name.trim().isEmpty) return;
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        savedName != null
+                            ? "${AppLocalizations.of(context)!.name}: $savedName"
+                            : "${AppLocalizations.of(context)!.epc}: $lastSingleEpc",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      if (savedName != null)
+                        Text("${AppLocalizations.of(context)!.epc}: $lastSingleEpc"),
+                      const SizedBox(height: 8),
+                      savedName == null
+                          ? ElevatedButton.icon(
+                              icon: const Icon(Icons.save),
+                              label: Text(AppLocalizations.of(context)!.saveTag),
+                              onPressed: () async {
+                                final name = await _promptForName(context, lastSingleEpc);
+                                if (name == null || name.trim().isEmpty) return;
 
-                              try {
-                                await tagRepository.save(lastSingleEpc, name.trim());
-                                await _loadSaved();
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        AppLocalizations.of(context)!.tagSavedSuccessfully,
+                                try {
+                                  await tagRepository.save(lastSingleEpc, name.trim());
+                                  await _loadSaved();
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          AppLocalizations.of(context)!.tagSavedSuccessfully,
+                                        ),
+                                        backgroundColor: Colors.green,
                                       ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "${AppLocalizations.of(context)!.failedToSaveTag}: $e",
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          "${AppLocalizations.of(context)!.failedToSaveTag}: $e",
+                                        ),
+                                        backgroundColor: Colors.red,
                                       ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                    );
+                                  }
                                 }
-                              }
-                            },
-                          )
-                        : Row(
-                            children: [
-                              const Icon(Icons.verified, color: Colors.green),
-                              const SizedBox(width: 8),
-                              Text(
-                                AppLocalizations.of(context)!.tagSaved,
-                                style: const TextStyle(color: Colors.green),
-                              ),
-                            ],
-                          ),
-                  ],
+                              },
+                            )
+                          : Row(
+                              children: [
+                                const Icon(Icons.verified, color: Colors.green),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(context)!.tagSaved,
+                                  style: const TextStyle(color: Colors.green),
+                                ),
+                              ],
+                            ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -515,6 +514,19 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
               }
             },
           ),
+          Spacer(),
+          Center(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.radio_button_checked),
+              label: Text(AppLocalizations.of(context)!.readSingleTag),
+              onPressed: () async {
+                // Read from selected bank
+                final bank = _memBankCode(selectedMemoryBank);
+                await ChafonH103RfidService.readSingleTagFromBank(bank);
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -640,22 +652,28 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
             label: '${outputPower?.toInt() ?? 20} ${AppLocalizations.of(context)!.dBm}',
             onChanged: (value) => setState(() => outputPower = value.toInt()),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.save),
-            label: Text(AppLocalizations.of(context)!.saveParameters),
-            onPressed: () async => await sendConfigToDevice(),
+          // const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.save),
+                label: Text(AppLocalizations.of(context)!.saveParameters),
+                onPressed: () async => await sendConfigToDevice(),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  await ChafonH103RfidService.getBatteryLevel();
+                },
+                child: Text("🔋 ${AppLocalizations.of(context)!.checkBattery}"),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () async {
-              await ChafonH103RfidService.getBatteryLevel();
-            },
-            child: Text("🔋 ${AppLocalizations.of(context)!.checkBattery}"),
-          ),
+
           const SizedBox(height: 16),
           Text(log),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
           Text(
@@ -761,22 +779,22 @@ class _FunctionsState extends State<Functions> with SingleTickerProviderStateMix
               },
             ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.link_off),
-            label: Text(AppLocalizations.of(context)!.disconnect),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              await ChafonH103RfidService.disconnect();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DeviceScanScreen()),
-                  (route) => false,
-                );
-              }
-            },
-          ),
+          // const SizedBox(height: 16),
+          // ElevatedButton.icon(
+          //   icon: const Icon(Icons.link_off),
+          //   label: Text(AppLocalizations.of(context)!.disconnect),
+          //   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          //   onPressed: () async {
+          //     await ChafonH103RfidService.disconnect();
+          //     if (mounted) {
+          //       Navigator.pushAndRemoveUntil(
+          //         context,
+          //         MaterialPageRoute(builder: (_) => const DeviceScanScreen()),
+          //         (route) => false,
+          //       );
+          //     }
+          //   },
+          // ),
         ],
       ),
     );
